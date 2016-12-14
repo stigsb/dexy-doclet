@@ -38,6 +38,7 @@ task sourceJar(type: Jar) {
 }
 
 task fatJar(type: Jar) {
+    classifier 'fat'
     baseName = project.name + '-all'
     def libDir = "${projectDir}/lib/"
     from {
@@ -89,7 +90,11 @@ publishing {
     }
     publications {
         maven(MavenPublication) {
+            pom.withXml {
+                asNode().remove(asNode().dependencies)
+            }
             from components.java
+            artifact fatJar
         }
     }
 }
