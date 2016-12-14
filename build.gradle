@@ -78,8 +78,12 @@ publishing {
     publications {
         jar(MavenPublication) {
             pom.withXml {
-                // remove dependencies since we include them in the jar
-                asNode().remove(asNode().dependencies[0])
+                // remove dependencies without groupId, since we include them in the jar
+                asNode().dependencies.'*'.each {
+                    if (!it.groupId) {
+                        it.parent().remove(it)
+                    }
+                }
             }
             from components.java
         }
