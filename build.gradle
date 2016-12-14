@@ -37,9 +37,7 @@ task sourceJar(type: Jar) {
     classifier 'sources'
 }
 
-task fatJar(type: Jar) {
-    classifier 'fat'
-    baseName = project.name + '-all'
+jar {
     def libDir = "${projectDir}/lib/"
     from {
         configurations.compile.findAll {
@@ -48,22 +46,11 @@ task fatJar(type: Jar) {
             zipTree(it)
         }
     }
-    with jar
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.10'
 }
-
-publishing {
-    publications {
-        publicRelease(MavenPublication) {
-            from components.java
-            artifact sourceJar
-        }
-    }
-}
-
 release {
     revertOnFail = true
     tagTemplate = "v${unsnapshottedVersion}"
@@ -89,12 +76,16 @@ publishing {
         }
     }
     publications {
-        maven(MavenPublication) {
+        jar(MavenPublication) {
             pom.withXml {
+                // remove dependencies since we include them in the jar
                 asNode().remove(asNode().dependencies)
             }
             from components.java
-            artifact fatJar
+        }
+        source(MavenPublication) {
+            from components.java
+            artifact sourceJar
         }
     }
 }
