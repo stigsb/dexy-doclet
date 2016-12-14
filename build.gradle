@@ -50,6 +50,10 @@ task fatJar(type: Jar) {
     with jar
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.10'
+}
+
 publishing {
     publications {
         publicRelease(MavenPublication) {
@@ -64,6 +68,30 @@ release {
     tagTemplate = "v${unsnapshottedVersion}"
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.10'
+publishing {
+    repositories {
+        maven {
+            credentials {
+                // You need to provide these property values somehow to be able to publish.
+                // Putting them in ~/.gradle/gradle.properties works. See also
+                // https://docs.gradle.org/current/userguide/build_environment.html
+                username project.hasProperty('artifactoryTrdUsername') ? "${artifactoryTrdUsername}" : ""
+                password project.hasProperty('artifactoryTrdPassword') ? "${artifactoryTrdPassword}" : ""
+            }
+            if (project.version.toString().endsWith('-SNAPSHOT')) {
+                name 'ext-snapshot-local'
+                url 'https://artifactory.trd.zedge.net/ext-snapshot-local'
+            } else {
+                name 'ext-release-local'
+                url 'https://artifactory.trd.zedge.net/ext-release-local'
+            }
+        }
+    }
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
 }
+
+afterReleaseBuild.dependsOn publish
