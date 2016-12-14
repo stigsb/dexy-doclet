@@ -1,0 +1,69 @@
+import javax.tools.ToolProvider
+
+plugins {
+    id 'net.researchgate.release' version '2.3.4' // release management
+}
+
+repositories {
+    jcenter()
+    flatDir {
+        dirs 'lib'
+    }
+}
+
+apply plugin: 'antlr'
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
+group = "it.dexy.doclet"
+description = "A custom Javadoc Doclet which generates JSON of all the Javadoc info"
+
+ext {
+    unsnapshottedVersion = version.replaceAll("-SNAPSHOT", "")
+}
+
+dependencies {
+    antlr 'org.antlr:antlr:3.3'
+    // antlr-3.3-complete.jar 	json_simple-1.1.jar 	sqlitejdbc-v056.jar
+    // compile name: 'antlr-3.3-complete'
+    compile name: 'json_simple-1.1'
+    compile name: 'sqlitejdbc-v056'
+    //    compile name: 'LaTeXlet'
+    compile files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs())
+}
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier 'sources'
+}
+
+task fatJar(type: Jar) {
+    baseName = project.name + '-all'
+    def libDir = "${projectDir}/lib/"
+    from {
+        configurations.compile.findAll {
+            it.path.startsWith(libDir)
+        }.collect {
+            zipTree(it)
+        }
+    }
+    with jar
+}
+
+publishing {
+    publications {
+        publicRelease(MavenPublication) {
+            from components.java
+            artifact sourceJar
+        }
+    }
+}
+
+release {
+    revertOnFail = true
+    tagTemplate = "v${unsnapshottedVersion}"
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.10'
+}
