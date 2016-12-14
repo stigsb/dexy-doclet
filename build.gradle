@@ -79,7 +79,7 @@ publishing {
         jar(MavenPublication) {
             pom.withXml {
                 // remove dependencies since we include them in the jar
-                asNode().remove(asNode().dependencies)
+                asNode().remove(asNode().dependencies[0])
             }
             from components.java
         }
